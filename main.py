@@ -23,12 +23,12 @@ async def cmd_start(message: types.Message):
 # Хэндлер на команду /Answer
 @dp.message(Command("answer"))
 async def cmd_answer(message: types.Message):
-    await message.answer("Your answer\!")
+    await message.answer("_Your answer\!_")
 
 # Хэндлер на команду /Reply
 @dp.message(Command("reply"))
 async def cmd_reply(message: types.Message):
-    await message.reply("Your reply\!")
+    await message.reply("__Your reply\!__")
 
 @dp.message(Command("testtext"))#Not upregister
 async def cmd_testText(message: types.Message):
@@ -69,6 +69,27 @@ async def cmd_find(message: types.Message, command: CommandObject):
     else:
         await message.answer("Please, include text after the /find command\!")
 
+@dp.message(F.animation)
+async def echo_gif(message: types.Message):
+    await message.answer("Here you are\!\n")
+    await message.reply_animation(message.animation.file_id)
+
+@dp.message(F.photo)
+async def download_photo(message: types.Message, bot: Bot):
+    await bot.download(
+        message.photo[-1],
+        destination=f"D:/myDoc/Future/Telebot/testBotAiogram/tmp/{message.photo[-1].file_id}.jpg"
+    )
+    await message.answer("`Download of picture is complited\!`")
+
+@dp.message(F.sticker)
+async def download_sticker(message: types.Message, bot: Bot):
+    await bot.download(
+        message.sticker,
+        # для Windows пути надо подправить
+        destination=f"D:/myDoc/Future/Telebot/testBotAiogram/tmp/{message.sticker.file_id}.webp"
+    )
+    await message.answer("`Download of sticker is complited\!`")
 @dp.message(F.text)#Without F.text it works too
 async def echo_with_time(message: types.Message):
     # Получаем текущее время в часовом поясе ПК
@@ -79,11 +100,20 @@ async def echo_with_time(message: types.Message):
     # Отправляем новое сообщение с добавленным текстом
     await message.answer(f"{message.html_text}\n\n{added_text}", parse_mode="html") #message.html_text чтобы форматирование текста сохранялась
 
+#Don't check-------------------------------------------------------------------
+@dp.message(F.new_chat_members)
+async def somebody_added(message: types.Message):
+    for user in message.new_chat_members:
+        # проперти full_name берёт сразу имя И фамилию
+        # (на скриншоте выше у юзеров нет фамилии)
+        await message.reply(f"Hello there!, {user.full_name}")
+
+#-------------------------------------------------------------------
+
 # Запуск процесса поллинга новых апдейтов
 async def main():
     #dp.message.register(cmd_reply, Command("reply"))  # регистарция команды /reply
     await dp.start_polling(bot)
-
 
 if __name__ == "__main__":
     asyncio.run(main())
