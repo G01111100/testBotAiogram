@@ -1,10 +1,13 @@
 import asyncio
 import logging
+# from aiogram import * #Можно, но не нужно
+# from aiogram.filters import *
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters.command import Command
 from aiogram.filters import CommandObject #For arguments in commands
 from aiogram import F
 from aiogram import html
+from aiogram.utils.keyboard import ReplyKeyboardBuilder #For dynamic generetion buttons with Keyboard builder
 from datetime import datetime #for time link
 from config_reader import config #SecretToken
 
@@ -19,6 +22,19 @@ dp = Dispatcher()
 @dp.message(Command("start"))
 async def cmd_start(message: types.Message):
     await message.answer("*It's just begin*")
+    kb = [
+        [
+            types.KeyboardButton(text="С пюрешкой"),
+            types.KeyboardButton(text="Без пюрешки")
+        ],
+    ]
+    # keyboard = types.ReplyKeyboardMarkup(keyboard=kb)
+    keyboard = types.ReplyKeyboardMarkup(
+        keyboard=kb,
+        resize_keyboard=True,
+        input_field_placeholder="Выберите способ подачи"
+    )
+    await message.answer("Как подавать котлеты?", reply_markup=keyboard)
 
 # Хэндлер на команду /Answer
 @dp.message(Command("answer"))
@@ -46,6 +62,7 @@ async def cmd_name(message: types.Message, command: CommandObject):
 @dp.message(Command("find"))
 async def cmd_find(message: types.Message, command: CommandObject):
     if command.args:
+        #data = dict()
         data = {
             "url": "<N/A>",
             "email": "<N/A>",
@@ -69,6 +86,18 @@ async def cmd_find(message: types.Message, command: CommandObject):
     else:
         await message.answer("Please, include text after the /find command\!")
 
+@dp.message(Command("replybuilder"))
+async def reply_builder(message: types.Message):
+    builder = ReplyKeyboardBuilder()
+    for i in range(1, 17):
+        builder.add(types.KeyboardButton(text=str(i)))
+    builder.add(types.KeyboardButton(text=str("Cansel")))
+    builder.adjust(8, 8, 1)
+    await message.answer(
+        "Выберите число:",
+        reply_markup=builder.as_markup(resize_keyboard=True) #, one_time_keyboard=True),#selective - for pool of users
+    )
+
 @dp.message(F.animation)
 async def echo_gif(message: types.Message):
     await message.answer("Here you are\!\n")
@@ -90,6 +119,22 @@ async def download_sticker(message: types.Message, bot: Bot):
         destination=f"D:/myDoc/Future/Telebot/testBotAiogram/tmp/{message.sticker.file_id}.webp"
     )
     await message.answer("`Download of sticker is complited\!`")
+
+@dp.message(F.text.lower() == "с пюрешкой")
+async def with_puree(message: types.Message):
+    await message.reply("Отличный выбор\!", reply_markup=types.ReplyKeyboardRemove())
+
+@dp.message(F.text.lower() == "без пюрешки")
+async def without_puree(message: types.Message):
+    await message.reply("Так невкусно\!")
+
+@dp.message(F.text.lower() == "cansel")
+async def without_puree(message: types.Message):
+    await message.reply("Cansel\!", reply_markup=types.ReplyKeyboardRemove())
+
+async def without_puree(message: types.Message):
+    await message.reply("Так невкусно\!")
+
 @dp.message(F.text)#Without F.text it works too
 async def echo_with_time(message: types.Message):
     # Получаем текущее время в часовом поясе ПК
@@ -100,13 +145,16 @@ async def echo_with_time(message: types.Message):
     # Отправляем новое сообщение с добавленным текстом
     await message.answer(f"{message.html_text}\n\n{added_text}", parse_mode="html") #message.html_text чтобы форматирование текста сохранялась
 
-#Don't check-------------------------------------------------------------------
 @dp.message(F.new_chat_members)
 async def somebody_added(message: types.Message):
     for user in message.new_chat_members:
         # проперти full_name берёт сразу имя И фамилию
         # (на скриншоте выше у юзеров нет фамилии)
-        await message.reply(f"Hello there!, {user.full_name}")
+        await message.reply(f"Hello there\!, {user.full_name} ")
+
+
+
+#Don't check-------------------------------------------------------------------
 
 #-------------------------------------------------------------------
 
